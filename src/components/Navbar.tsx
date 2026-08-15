@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Menu, X, Sparkles, LogOut, User, Store, LayoutDashboard, Bell, ChevronDown, Calendar, Heart } from 'lucide-react';
+import { Menu, X, Sparkles, LogOut, User, Store, LayoutDashboard, Bell, ChevronDown, Calendar, Heart, Shield } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import { useUserAvatar } from '../lib/userAvatar';
@@ -256,6 +256,14 @@ export default function Navbar() {
                       >
                         <Heart className="w-3.5 h-3.5 text-sage-600" />
                         <span>Saved</span>
+                      </button>
+
+                      <button
+                        onClick={() => { setShowProfileMenu(false); navigate('/admin'); }}
+                        className="w-full flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-gold-700 hover:bg-gold-50 transition-colors text-left"
+                      >
+                        <Shield className="w-3.5 h-3.5 text-gold-600" />
+                        <span>Admin Portal</span>
                       </button>
 
                       <div className="border-t border-sage-100 my-1" />

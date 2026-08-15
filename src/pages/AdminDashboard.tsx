@@ -12,11 +12,80 @@ import { dataCache } from '../lib/cache';
 import Navbar from '../components/Navbar';
 import { useInView } from '../hooks/useInView';
 
+import { MOCK_VENDORS } from '../lib/vendors';
+
 type VendorWithProfile = Vendor & {
   approval_status?: string;
   commission_rate?: number;
   subscription_tier?: string;
 };
+
+const DEMO_ADMIN_BOOKINGS: Booking[] = [
+  {
+    id: 'demo-b1',
+    booking_ref: 'FEST-2026-8912',
+    customer_name: 'Kranti Kumar',
+    customer_email: 'kranti@festivo.com',
+    customer_phone: '+91 98765 43210',
+    event_type: 'Grand Wedding Reception',
+    event_date: '2026-09-15',
+    guests: 500,
+    special_requests: 'Require stage flower canopy & live dhol performance',
+    total_amount: 145000,
+    status: 'confirmed',
+    payment_status: 'paid',
+    created_at: '2026-08-10T10:30:00.000Z',
+    vendor_id: 'v1',
+  },
+  {
+    id: 'demo-b2',
+    booking_ref: 'FEST-2026-9041',
+    customer_name: 'Ananya Sharma',
+    customer_email: 'ananya@gmail.com',
+    customer_phone: '+91 98123 45678',
+    event_type: 'Pre-Wedding Sangeet Night',
+    event_date: '2026-10-05',
+    guests: 250,
+    special_requests: 'Cold pyro fountains and LED stage backdrop',
+    total_amount: 85000,
+    status: 'confirmed',
+    payment_status: 'paid',
+    created_at: '2026-08-12T14:15:00.000Z',
+    vendor_id: 'v6',
+  },
+  {
+    id: 'demo-b3',
+    booking_ref: 'FEST-2026-9118',
+    customer_name: 'Rajesh Verma',
+    customer_email: 'rajesh.v@corporategroup.in',
+    customer_phone: '+91 97788 99000',
+    event_type: 'Annual Tech Gala 2026',
+    event_date: '2026-11-20',
+    guests: 800,
+    special_requests: '5-star gourmet buffet catering & cocktail lounge',
+    total_amount: 220000,
+    status: 'pending',
+    payment_status: 'pending',
+    created_at: '2026-08-14T09:00:00.000Z',
+    vendor_id: 'v11',
+  },
+  {
+    id: 'demo-b4',
+    booking_ref: 'FEST-2026-9230',
+    customer_name: 'Priya Nair',
+    customer_email: 'priya.nair@outlook.com',
+    customer_phone: '+91 96543 21098',
+    event_type: 'Traditional Muhurtham',
+    event_date: '2026-12-01',
+    guests: 400,
+    special_requests: 'Candid 4K photography and aerial drone shots',
+    total_amount: 75000,
+    status: 'confirmed',
+    payment_status: 'paid',
+    created_at: '2026-08-14T16:45:00.000Z',
+    vendor_id: 'v13',
+  },
+];
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -40,15 +109,15 @@ export default function AdminDashboard() {
       const [vendorData, bookingData] = await Promise.all([
         dataCache.fetchWithCache('all_vendors', async () => {
           const { data } = await supabase.from('vendors').select('*').order('rating', { ascending: false });
-          return (data ?? []) as VendorWithProfile[];
+          return (data && data.length > 0) ? (data as VendorWithProfile[]) : (MOCK_VENDORS as VendorWithProfile[]);
         }),
         dataCache.fetchWithCache('admin_bookings', async () => {
           const { data } = await supabase.from('bookings').select('*').order('created_at', { ascending: false }).limit(50);
-          return data ?? [];
+          return (data && data.length > 0) ? data : DEMO_ADMIN_BOOKINGS;
         }),
       ]);
-      setVendors(vendorData as VendorWithProfile[]);
-      setBookings(bookingData as Booking[]);
+      setVendors((vendorData && vendorData.length > 0) ? (vendorData as VendorWithProfile[]) : (MOCK_VENDORS as VendorWithProfile[]));
+      setBookings((bookingData && bookingData.length > 0) ? (bookingData as Booking[]) : DEMO_ADMIN_BOOKINGS);
       setLoading(false);
     };
     fetchData();
