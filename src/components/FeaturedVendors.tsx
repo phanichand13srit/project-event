@@ -23,7 +23,7 @@ function VendorFlipCard({
 
   return (
     <div
-      className={`animate-on-scroll ${inView ? 'in-view' : ''} delay-${Math.min((index + 1) * 100, 600)} group h-[440px] sm:h-[490px]`}
+      className={`animate-on-scroll ${inView ? 'in-view' : ''} delay-${Math.min((index + 1) * 100, 600)} group h-[490px]`}
       style={{ perspective: '1000px' }}
     >
       {/* 3D Flip Container */}
@@ -262,7 +262,7 @@ export default function FeaturedVendors() {
         </div>
 
         {/* 6 Individual Featured Vendor Flip Cards Grid (3 Columns x 2 Rows) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {MOCK_VENDORS.slice(0, 6).map((vendor, index) => (
             <VendorFlipCard
               key={vendor.id}

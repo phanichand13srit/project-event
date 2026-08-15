@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Menu, X, Sparkles, LogOut, User, Store, LayoutDashboard, Bell, ChevronDown, Calendar, Heart, Shield } from 'lucide-react';
+import { Menu, X, Sparkles, LogOut, User, Store, LayoutDashboard, Bell, ChevronDown, Calendar, Heart } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import { useUserAvatar } from '../lib/userAvatar';
@@ -235,34 +235,26 @@ export default function Navbar() {
                       </div>
 
                       <button
-                        onClick={() => { setShowProfileMenu(false); navigate(isVendor ? '/vendor-dashboard' : '/dashboard?tab=overview'); }}
+                        onClick={() => { setShowProfileMenu(false); navigate('/dashboard'); }}
                         className="w-full flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-sage-800 hover:bg-sage-50 transition-colors text-left"
                       >
                         <LayoutDashboard className="w-3.5 h-3.5 text-sage-600" />
-                        <span>Dashboard</span>
+                        <span>Customer Hub</span>
                       </button>
 
                       <button
-                        onClick={() => { setShowProfileMenu(false); navigate(isVendor ? '/vendor-dashboard' : '/dashboard?tab=bookings'); }}
+                        onClick={() => { setShowProfileMenu(false); navigate('/vendor-dashboard'); }}
                         className="w-full flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-sage-800 hover:bg-sage-50 transition-colors text-left"
                       >
-                        <Calendar className="w-3.5 h-3.5 text-sage-600" />
-                        <span>Bookings</span>
-                      </button>
-
-                      <button
-                        onClick={() => { setShowProfileMenu(false); navigate(isVendor ? '/vendor-dashboard' : '/dashboard?tab=saved'); }}
-                        className="w-full flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-sage-800 hover:bg-sage-50 transition-colors text-left"
-                      >
-                        <Heart className="w-3.5 h-3.5 text-sage-600" />
-                        <span>Saved</span>
+                        <Store className="w-3.5 h-3.5 text-gold-600" />
+                        <span>Vendor Studio</span>
                       </button>
 
                       <button
                         onClick={() => { setShowProfileMenu(false); navigate('/admin'); }}
-                        className="w-full flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-gold-700 hover:bg-gold-50 transition-colors text-left"
+                        className="w-full flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-sage-800 hover:bg-sage-50 transition-colors text-left"
                       >
-                        <Shield className="w-3.5 h-3.5 text-gold-600" />
+                        <Shield className="w-3.5 h-3.5 text-sage-700" />
                         <span>Admin Portal</span>
                       </button>
 

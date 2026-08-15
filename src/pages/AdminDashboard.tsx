@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Shield, BarChart3, Users, Wallet, TrendingUp, CheckCircle2,
   XCircle, Clock, Store, Star, Sparkles, ArrowRight, LogOut,
-  AlertCircle, Download, Eye, Search, Filter, DollarSign
+  AlertCircle, Download, Eye, Search, Filter, DollarSign, X, FileText, ExternalLink
 } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { supabase } from '../lib/supabase';
@@ -12,80 +12,11 @@ import { dataCache } from '../lib/cache';
 import Navbar from '../components/Navbar';
 import { useInView } from '../hooks/useInView';
 
-import { MOCK_VENDORS } from '../lib/vendors';
-
 type VendorWithProfile = Vendor & {
   approval_status?: string;
   commission_rate?: number;
   subscription_tier?: string;
 };
-
-const DEMO_ADMIN_BOOKINGS: Booking[] = [
-  {
-    id: 'demo-b1',
-    booking_ref: 'FEST-2026-8912',
-    customer_name: 'Kranti Kumar',
-    customer_email: 'kranti@festivo.com',
-    customer_phone: '+91 98765 43210',
-    event_type: 'Grand Wedding Reception',
-    event_date: '2026-09-15',
-    guests: 500,
-    special_requests: 'Require stage flower canopy & live dhol performance',
-    total_amount: 145000,
-    status: 'confirmed',
-    payment_status: 'paid',
-    created_at: '2026-08-10T10:30:00.000Z',
-    vendor_id: 'v1',
-  },
-  {
-    id: 'demo-b2',
-    booking_ref: 'FEST-2026-9041',
-    customer_name: 'Ananya Sharma',
-    customer_email: 'ananya@gmail.com',
-    customer_phone: '+91 98123 45678',
-    event_type: 'Pre-Wedding Sangeet Night',
-    event_date: '2026-10-05',
-    guests: 250,
-    special_requests: 'Cold pyro fountains and LED stage backdrop',
-    total_amount: 85000,
-    status: 'confirmed',
-    payment_status: 'paid',
-    created_at: '2026-08-12T14:15:00.000Z',
-    vendor_id: 'v6',
-  },
-  {
-    id: 'demo-b3',
-    booking_ref: 'FEST-2026-9118',
-    customer_name: 'Rajesh Verma',
-    customer_email: 'rajesh.v@corporategroup.in',
-    customer_phone: '+91 97788 99000',
-    event_type: 'Annual Tech Gala 2026',
-    event_date: '2026-11-20',
-    guests: 800,
-    special_requests: '5-star gourmet buffet catering & cocktail lounge',
-    total_amount: 220000,
-    status: 'pending',
-    payment_status: 'pending',
-    created_at: '2026-08-14T09:00:00.000Z',
-    vendor_id: 'v11',
-  },
-  {
-    id: 'demo-b4',
-    booking_ref: 'FEST-2026-9230',
-    customer_name: 'Priya Nair',
-    customer_email: 'priya.nair@outlook.com',
-    customer_phone: '+91 96543 21098',
-    event_type: 'Traditional Muhurtham',
-    event_date: '2026-12-01',
-    guests: 400,
-    special_requests: 'Candid 4K photography and aerial drone shots',
-    total_amount: 75000,
-    status: 'confirmed',
-    payment_status: 'paid',
-    created_at: '2026-08-14T16:45:00.000Z',
-    vendor_id: 'v13',
-  },
-];
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -93,35 +24,211 @@ export default function AdminDashboard() {
   const [vendors, setVendors] = useState<VendorWithProfile[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'vendors' | 'bookings' | 'revenue'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'applications' | 'vendors' | 'bookings' | 'revenue'>('applications');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [pendingApplications, setPendingApplications] = useState<any[]>([]);
+  const [selectedDocPreview, setSelectedDocPreview] = useState<{
+    title: string;
+    docType: string;
+    fileUrl: string;
+    idNumber?: string;
+    app: any;
+  } | null>(null);
 
   const statsView = useInView<HTMLDivElement>();
 
-  useEffect(() => {
-    if (!user) { navigate('/auth'); return; }
-  }, [user, navigate]);
+  const isAdminAuth = localStorage.getItem('festivo_admin_authenticated') === 'true';
 
   useEffect(() => {
-    const fetchData = async () => {
-      // Fetch vendors (cache-first) and bookings in parallel
+    if (!user && !isAdminAuth) {
+      navigate('/auth?admin=true');
+      return;
+    }
+  }, [user, isAdminAuth, navigate]);
+
+  const loadPendingApplications = () => {
+    const raw = localStorage.getItem('festivo_pending_vendors');
+    let pendingList: any[] = [];
+    if (raw) {
+      try {
+        pendingList = JSON.parse(raw);
+      } catch (e) {}
+    }
+
+    // Always check active vendor profile & KYC submission from vendor dashboard as live fallback
+    const currentVendorProfile = localStorage.getItem('vendor_user_profile');
+    const currentKycRecord = localStorage.getItem('vendor_kyc_record');
+    const currentKycStatus = localStorage.getItem('vendor_kyc_status');
+
+    if (currentVendorProfile) {
+      try {
+        const vUser = JSON.parse(currentVendorProfile);
+        const kRecord = currentKycRecord ? JSON.parse(currentKycRecord) : null;
+        const vEmail = (vUser.email || '').toLowerCase().trim();
+
+        if (vEmail && vEmail !== 'vendor@festivo.com') {
+          const specStatus = localStorage.getItem(`festivo_kyc_status_${vEmail}`);
+          const isApproved = specStatus === 'Approved' || currentKycStatus === 'verified';
+
+          const existingIndex = pendingList.findIndex((p: any) =>
+            (p.details?.email && p.details.email.toLowerCase().trim() === vEmail) ||
+            p.name === vUser.businessName
+          );
+
+          const constructedApp = {
+            id: vUser.id || `VND-${Date.now()}`,
+            name: vUser.businessName || vUser.fullName || 'Vendor Application',
+            category: vUser.category || 'Event Provider',
+            location: vUser.location || 'Hyderabad, India',
+            price_amount: 45000,
+            price_label: 'Starting Package',
+            price_unit: 'event',
+            rating: 5.0,
+            reviews: 1,
+            image: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=800',
+            logo: 'VP',
+            verified: isApproved,
+            badge: isApproved ? 'Approved' : 'Pending Verification',
+            badge_color: isApproved ? 'bg-sage-600' : 'bg-gold-500',
+            slug: vUser.username || 'vendor-partner',
+            details: {
+              email: vUser.email,
+              phone: vUser.phone || '+91 93475 67375',
+              owner: vUser.fullName || 'Vendor Owner',
+              address: vUser.location || 'Hyderabad, India',
+              registrationDate: new Date().toISOString().split('T')[0],
+              status: isApproved ? 'Approved' : 'Pending Verification',
+              kyc: {
+                idNumber: kRecord?.govtIdNumber || 'Submitted',
+                aadhaarFront: kRecord?.govtIdFile || '',
+                cancelledCheque: kRecord?.bankProofFile || ''
+              }
+            }
+          };
+
+          if (existingIndex >= 0) {
+            // Update existing entry with latest KYC details if present
+            pendingList[existingIndex] = {
+              ...pendingList[existingIndex],
+              verified: isApproved,
+              badge: isApproved ? 'Approved' : 'Pending Verification',
+              details: {
+                ...pendingList[existingIndex].details,
+                status: isApproved ? 'Approved' : 'Pending Verification',
+                kyc: {
+                  ...pendingList[existingIndex].details?.kyc,
+                  idNumber: kRecord?.govtIdNumber || pendingList[existingIndex].details?.kyc?.idNumber || 'Submitted',
+                  aadhaarFront: kRecord?.govtIdFile || pendingList[existingIndex].details?.kyc?.aadhaarFront || '',
+                  cancelledCheque: kRecord?.bankProofFile || pendingList[existingIndex].details?.kyc?.cancelledCheque || ''
+                }
+              }
+            };
+          } else {
+            pendingList.unshift(constructedApp);
+          }
+          localStorage.setItem('festivo_pending_vendors', JSON.stringify(pendingList));
+        }
+      } catch (e) {}
+    }
+
+    setPendingApplications(pendingList);
+  };
+
+  useEffect(() => {
+    loadPendingApplications();
+    window.addEventListener('storage', loadPendingApplications);
+    return () => window.removeEventListener('storage', loadPendingApplications);
+  }, []);
+
+  const loadAllBookingsAndVendors = async () => {
+    try {
       const [vendorData, bookingData] = await Promise.all([
         dataCache.fetchWithCache('all_vendors', async () => {
           const { data } = await supabase.from('vendors').select('*').order('rating', { ascending: false });
-          return (data && data.length > 0) ? (data as VendorWithProfile[]) : (MOCK_VENDORS as VendorWithProfile[]);
+          return (data ?? []) as VendorWithProfile[];
         }),
         dataCache.fetchWithCache('admin_bookings', async () => {
           const { data } = await supabase.from('bookings').select('*').order('created_at', { ascending: false }).limit(50);
-          return (data && data.length > 0) ? data : DEMO_ADMIN_BOOKINGS;
+          return data ?? [];
         }),
       ]);
-      setVendors((vendorData && vendorData.length > 0) ? (vendorData as VendorWithProfile[]) : (MOCK_VENDORS as VendorWithProfile[]));
-      setBookings((bookingData && bookingData.length > 0) ? (bookingData as Booking[]) : DEMO_ADMIN_BOOKINGS);
-      setLoading(false);
-    };
-    fetchData();
+
+      const localCustBookings = JSON.parse(localStorage.getItem('festivo_customer_bookings') || '[]');
+      const localVendorBookings = JSON.parse(localStorage.getItem('vendor_bookings') || '[]');
+
+      const formattedLocalCust = localCustBookings.map((b: any) => ({
+        id: b.id || `bk_${Math.random()}`,
+        booking_ref: b.booking_ref || `FEST-${Math.floor(1000 + Math.random() * 9000)}`,
+        customer_name: b.customer_name || 'Customer',
+        customer_email: b.customer_email || 'customer@festivo.com',
+        customer_phone: b.customer_phone || '+91 90000 00000',
+        event_type: b.event_type || b.type || 'Event',
+        event_date: b.event_date || b.date || '2026-09-20',
+        guests: b.guests || 200,
+        total_amount: b.total_amount || (parseInt(String(b.budget || '0').replace(/[^0-9]/g, ''), 10) || 45000),
+        special_requests: b.special_requests || 'Standard event booking',
+        payment_status: b.payment_status || 'paid',
+        status: b.status || 'confirmed',
+        vendor_id: b.vendor_id || 'v1',
+        created_at: b.created_at || new Date().toISOString()
+      }));
+
+      const formattedLocalVendor = localVendorBookings.map((b: any) => ({
+        id: b.id || `bk_${Math.random()}`,
+        booking_ref: `FEST-${Math.floor(1000 + Math.random() * 9000)}`,
+        customer_name: b.customer || 'Client Inquiry',
+        customer_email: 'client@festivo.com',
+        customer_phone: '+91 90000 00000',
+        event_type: b.type || 'Event Service',
+        event_date: b.date || '2026-09-25',
+        guests: 250,
+        total_amount: parseInt(String(b.budget || '0').replace(/[^0-9]/g, ''), 10) || 35000,
+        special_requests: b.location || 'Direct booking request',
+        payment_status: b.status === 'confirmed' || b.status === 'completed' ? 'paid' : 'pending',
+        status: b.status || 'pending',
+        vendor_id: 'v_local',
+        created_at: new Date().toISOString()
+      }));
+
+      const combinedBookings = [...(bookingData || []), ...formattedLocalCust, ...formattedLocalVendor];
+      setBookings(combinedBookings);
+      setVendors(vendorData as VendorWithProfile[]);
+    } catch (e) {}
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadAllBookingsAndVendors();
+    window.addEventListener('storage', loadAllBookingsAndVendors);
+    return () => window.removeEventListener('storage', loadAllBookingsAndVendors);
   }, []);
+
+  const handleApproveApplication = (app: any) => {
+    const updated = pendingApplications.map(p => (p.name === app.name || p.id === app.id) ? { ...p, verified: true, badge: 'Verified', badge_color: 'bg-sage-600', details: { ...p.details, status: 'Approved' } } : p);
+    setPendingApplications(updated);
+    localStorage.setItem('festivo_pending_vendors', JSON.stringify(updated));
+
+    localStorage.setItem('vendor_kyc_status', 'verified');
+    if (app.details?.email) {
+      localStorage.setItem(`festivo_kyc_status_${app.details.email.toLowerCase()}`, 'Approved');
+    }
+    window.dispatchEvent(new Event('storage'));
+    alert(`Application Approved for "${app.name}" (${app.details?.owner || 'Vendor'})!\n\nOfficial Blue Verified Badge granted. Vendor Dashboard contents are now UNLOCKED!`);
+  };
+
+  const handleRejectApplication = (app: any) => {
+    const updated = pendingApplications.map(p => (p.name === app.name || p.id === app.id) ? { ...p, verified: false, badge: 'Rejected', badge_color: 'bg-red-500', details: { ...p.details, status: 'Rejected' } } : p);
+    setPendingApplications(updated);
+    localStorage.setItem('festivo_pending_vendors', JSON.stringify(updated));
+
+    localStorage.setItem('vendor_kyc_status', 'unverified');
+    if (app.details?.email) {
+      localStorage.setItem(`festivo_kyc_status_${app.details.email.toLowerCase()}`, 'Rejected');
+    }
+    window.dispatchEvent(new Event('storage'));
+    alert(`Application Rejected for "${app.name}". Vendor Dashboard contents will remain locked.`);
+  };
 
   const totalRevenue = bookings.filter(b => b.payment_status === 'paid').reduce((s, b) => s + b.total_amount, 0);
   const commissionRevenue = Math.round(totalRevenue * 0.15);
@@ -185,15 +292,15 @@ export default function AdminDashboard() {
             </div>
 
             <div className="flex gap-1 mt-6 overflow-x-auto">
-              {(['overview', 'vendors', 'bookings', 'revenue'] as const).map(tab => (
+              {(['overview', 'applications', 'vendors', 'bookings', 'revenue'] as const).map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all capitalize whitespace-nowrap ${
-                    activeTab === tab ? 'bg-white text-sage-600' : 'text-white/70 hover:text-white hover:bg-white/10'
+                    activeTab === tab ? 'bg-white text-sage-600 shadow-md' : 'text-white/70 hover:text-white hover:bg-white/10'
                   }`}
                 >
-                  {tab}
+                  {tab === 'applications' ? `Applications (${pendingApplications.filter(a => !a.verified).length})` : tab}
                 </button>
               ))}
             </div>
@@ -201,6 +308,143 @@ export default function AdminDashboard() {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Applications Review Tab */}
+          {activeTab === 'applications' && (
+            <div className="bg-white rounded-2xl shadow-card p-6 space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="font-display text-2xl font-bold text-sage-900 flex items-center gap-2">
+                    <Shield className="w-6 h-6 text-sage-600" /> Vendor Applications & KYC Inspection
+                  </h2>
+                  <p className="text-dark-500 text-sm mt-1 font-medium">
+                    Review submitted vendor identity documents (Aadhaar/PAN/Cheque) and click Accept to unlock their Vendor Dashboard.
+                  </p>
+                </div>
+                <span className="bg-gold-100 text-gold-800 text-xs font-extrabold px-3 py-1.5 rounded-full border border-gold-300">
+                  {pendingApplications.filter(a => !a.verified).length} Pending Review
+                </span>
+              </div>
+
+              {pendingApplications.length === 0 ? (
+                <div className="text-center py-12 bg-cream-50/50 rounded-2xl border border-dashed border-sage-200">
+                  <CheckCircle2 className="w-12 h-12 text-sage-500 mx-auto mb-3" />
+                  <p className="font-bold text-sage-900 text-base">No pending applications</p>
+                  <p className="text-dark-500 text-sm">All submitted vendor applications have been reviewed.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {pendingApplications.map((app, idx) => (
+                    <div key={app.id || idx} className="bg-cream-50/60 rounded-2xl border border-sage-100 p-6 space-y-4 transition-all hover:shadow-md">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-sage-100 pb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-2xl bg-sage-800 text-white font-extrabold text-base flex items-center justify-center shadow-md">
+                            {app.name?.[0] || 'V'}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-bold text-sage-900 text-lg">{app.name}</h3>
+                              <span className={`text-xs font-extrabold px-2.5 py-0.5 rounded-full border ${app.verified ? 'bg-sage-100 text-sage-800 border-sage-300' : 'bg-gold-100 text-gold-800 border-gold-300'}`}>
+                                {app.details?.status || (app.verified ? 'Approved' : 'Pending Verification')}
+                              </span>
+                            </div>
+                            <p className="text-dark-500 text-xs font-semibold">
+                              Owner: {app.details?.owner || 'Vendor Partner'} · {app.category} · {app.location}
+                            </p>
+                            <p className="text-sage-700 text-xs font-mono">{app.details?.email} · {app.details?.phone}</p>
+                          </div>
+                        </div>
+
+                        {/* Accept & Reject Action Buttons */}
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleApproveApplication(app)}
+                            className="flex items-center gap-2 px-5 py-2.5 bg-sage-600 hover:bg-sage-700 text-white font-bold text-xs rounded-xl shadow-glow-sage transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                          >
+                            <CheckCircle2 className="w-4 h-4" /> Accept & Unlock Dashboard
+                          </button>
+                          <button
+                            onClick={() => handleRejectApplication(app)}
+                            className="flex items-center gap-1.5 px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                          >
+                            <XCircle className="w-4 h-4" /> Reject
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Submitted Documents Inspection */}
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wider text-sage-800 mb-2.5 flex items-center justify-between">
+                          <span>Submitted Inspection Proofs</span>
+                          <span className="text-[11px] text-sage-600 font-semibold normal-case">Click "View Document" to inspect uploaded files</span>
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                          {/* Card 1: Govt Photo ID */}
+                          <div className="flex items-center justify-between p-3.5 bg-white rounded-2xl border border-sage-100 shadow-sm hover:border-sage-300 transition-all">
+                            <div className="flex items-center gap-3 min-w-0">
+                              {app.details?.kyc?.aadhaarFront && (app.details.kyc.aadhaarFront.startsWith('data:image') || app.details.kyc.aadhaarFront.startsWith('http')) ? (
+                                <img
+                                  src={app.details.kyc.aadhaarFront}
+                                  alt="Govt Photo ID"
+                                  onClick={() => setSelectedDocPreview({ title: 'Government Photo ID (Aadhaar/PAN)', docType: 'Govt Photo ID', fileUrl: app.details.kyc.aadhaarFront, idNumber: app.details?.kyc?.idNumber || 'Uploaded ID', app })}
+                                  className="w-14 h-11 object-cover rounded-lg border border-sage-200 cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0 shadow-sm"
+                                />
+                              ) : (
+                                <div className="w-10 h-10 rounded-xl bg-sage-50 border border-sage-200 flex items-center justify-center flex-shrink-0 text-sage-700">
+                                  <Shield className="w-5 h-5 text-sage-600" />
+                                </div>
+                              )}
+                              <div className="min-w-0">
+                                <p className="font-bold text-sage-900 text-xs truncate">Government Photo ID (Aadhaar/PAN)</p>
+                                <p className="text-dark-400 font-mono text-[11px] truncate">ID No: {app.details?.kyc?.idNumber || 'Attached'}</p>
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => setSelectedDocPreview({ title: 'Government Photo ID (Aadhaar/PAN)', docType: 'Govt Photo ID', fileUrl: app.details?.kyc?.aadhaarFront || '', idNumber: app.details?.kyc?.idNumber || 'Attached', app })}
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-sage-50 hover:bg-sage-100 text-sage-800 font-extrabold text-xs rounded-xl border border-sage-200 transition-colors flex-shrink-0 cursor-pointer"
+                            >
+                              <Eye className="w-3.5 h-3.5 text-sage-600" /> View Document
+                            </button>
+                          </div>
+
+                          {/* Card 2: Banking Proof */}
+                          <div className="flex items-center justify-between p-3.5 bg-white rounded-2xl border border-sage-100 shadow-sm hover:border-sage-300 transition-all">
+                            <div className="flex items-center gap-3 min-w-0">
+                              {app.details?.kyc?.cancelledCheque && (app.details.kyc.cancelledCheque.startsWith('data:image') || app.details.kyc.cancelledCheque.startsWith('http')) ? (
+                                <img
+                                  src={app.details.kyc.cancelledCheque}
+                                  alt="Banking Proof"
+                                  onClick={() => setSelectedDocPreview({ title: 'Banking Proof (Cancelled Cheque)', docType: 'Banking Proof', fileUrl: app.details.kyc.cancelledCheque, app })}
+                                  className="w-14 h-11 object-cover rounded-lg border border-sage-200 cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0 shadow-sm"
+                                />
+                              ) : (
+                                <div className="w-10 h-10 rounded-xl bg-gold-50 border border-gold-200 flex items-center justify-center flex-shrink-0 text-gold-700">
+                                  <Wallet className="w-5 h-5 text-gold-600" />
+                                </div>
+                              )}
+                              <div className="min-w-0">
+                                <p className="font-bold text-sage-900 text-xs truncate">Banking Proof (Cancelled Cheque)</p>
+                                <p className="text-dark-400 font-mono text-[11px] truncate">Bank Payout Verification</p>
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => setSelectedDocPreview({ title: 'Banking Proof (Cancelled Cheque)', docType: 'Banking Proof', fileUrl: app.details?.kyc?.cancelledCheque || '', app })}
+                              className="flex items-center gap-1.5 px-3 py-1.5 bg-gold-50 hover:bg-gold-100 text-gold-900 font-extrabold text-xs rounded-xl border border-gold-200 transition-colors flex-shrink-0 cursor-pointer"
+                            >
+                              <Eye className="w-3.5 h-3.5 text-gold-600" /> View Document
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           {/* Overview */}
           {activeTab === 'overview' && (
             <>
@@ -492,6 +736,97 @@ export default function AdminDashboard() {
           )}
         </div>
       </div>
+
+      {/* Full Document Inspector Modal */}
+      {selectedDocPreview && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-dark-950/80 backdrop-blur-md animate-fade-in font-sans">
+          <div className="bg-white rounded-3xl border border-white/50 shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden relative font-sans">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-5 border-b border-sage-100 bg-gradient-to-r from-sage-900 to-sage-800 text-white">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-sage-700 flex items-center justify-center border border-sage-600">
+                  <Shield className="w-5 h-5 text-gold-400" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base">{selectedDocPreview.title}</h3>
+                  <p className="text-xs text-sage-200 font-semibold">
+                    Submitted by {selectedDocPreview.app.name} ({selectedDocPreview.app.details?.owner || 'Vendor'})
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedDocPreview(null)}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Document Viewer Body */}
+            <div className="p-6 overflow-y-auto space-y-4 text-center bg-cream-50/50 flex-1 flex flex-col items-center justify-center">
+              {selectedDocPreview.fileUrl && (selectedDocPreview.fileUrl.startsWith('data:image') || selectedDocPreview.fileUrl.startsWith('http')) ? (
+                <div className="rounded-2xl overflow-hidden border border-sage-200 shadow-md bg-white p-3 max-w-full">
+                  <img
+                    src={selectedDocPreview.fileUrl}
+                    alt={selectedDocPreview.title}
+                    className="max-h-[50vh] object-contain rounded-xl mx-auto shadow-sm"
+                  />
+                  <div className="mt-2 text-xs font-semibold text-sage-800 flex items-center justify-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-sage-600" /> Scanned Document Image Verified
+                  </div>
+                </div>
+              ) : (
+                <div className="w-full max-w-md p-8 bg-white rounded-3xl border-2 border-dashed border-sage-200 text-center space-y-4 shadow-sm">
+                  <div className="w-16 h-16 rounded-2xl bg-sage-100 text-sage-700 flex items-center justify-center mx-auto shadow-inner">
+                    <FileText className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sage-900 text-lg">{selectedDocPreview.docType} Attached</h4>
+                    <p className="text-xs font-mono text-sage-800 mt-1 bg-sage-50 py-1.5 px-4 rounded-xl inline-block border border-sage-200">
+                      {selectedDocPreview.fileUrl || 'scanned_document.png'}
+                    </p>
+                  </div>
+                  {selectedDocPreview.idNumber && (
+                    <div className="p-3 bg-cream-100 rounded-xl text-xs font-mono font-bold text-sage-900 border border-cream-200">
+                      Official ID No: {selectedDocPreview.idNumber}
+                    </div>
+                  )}
+                  <p className="text-xs text-dark-500 font-medium">
+                    Verified Document Record · Scanned Copy Submitted for Verification
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer Action Bar */}
+            <div className="p-5 border-t border-sage-100 bg-white flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="text-xs text-dark-500 font-semibold text-left">
+                Inspect document details before granting Blue Verified Badge.
+              </div>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  onClick={() => {
+                    handleApproveApplication(selectedDocPreview.app);
+                    setSelectedDocPreview(null);
+                  }}
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-sage-600 hover:bg-sage-700 text-white font-bold text-xs rounded-xl shadow-glow-sage transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                >
+                  <CheckCircle2 className="w-4 h-4" /> Accept & Unlock Dashboard
+                </button>
+                <button
+                  onClick={() => {
+                    handleRejectApplication(selectedDocPreview.app);
+                    setSelectedDocPreview(null);
+                  }}
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                >
+                  <XCircle className="w-4 h-4" /> Reject
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

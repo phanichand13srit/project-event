@@ -53,7 +53,7 @@ function PhotoLightbox({ images, startIndex, onClose }: { images: string[]; star
         <span className="text-white text-sm font-medium">{current + 1} / {images.length}</span>
       </div>
 
-      <div className="relative z-10 max-w-5xl max-h-[85vh] mx-auto px-4 sm:px-16" onClick={(e) => e.stopPropagation()}>
+      <div className="relative z-10 max-w-5xl max-h-[85vh] mx-auto px-16" onClick={(e) => e.stopPropagation()}>
         <img
           key={current}
           src={images[current]}
@@ -66,15 +66,15 @@ function PhotoLightbox({ images, startIndex, onClose }: { images: string[]; star
 
       <button
         onClick={(e) => { e.stopPropagation(); setCurrent((c) => (c - 1 + images.length) % images.length); }}
-        className="absolute left-2 sm:left-4 z-10 w-9 h-9 sm:w-11 sm:h-11 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all"
+        className="absolute left-4 z-10 w-11 h-11 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all"
       >
-        <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+        <ChevronLeft className="w-5 h-5" />
       </button>
       <button
         onClick={(e) => { e.stopPropagation(); setCurrent((c) => (c + 1) % images.length); }}
-        className="absolute right-2 sm:right-4 z-10 w-9 h-9 sm:w-11 sm:h-11 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all"
+        className="absolute right-4 z-10 w-11 h-11 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all"
       >
-        <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+        <ArrowRight className="w-5 h-5" />
       </button>
     </div>
   );
@@ -131,18 +131,86 @@ export default function VendorDetailPage() {
     if (!slug) return;
     setLoading(true);
 
-    const allVendors = dataCache.get<Vendor[]>('all_vendors') || MOCK_VENDORS;
-    const cachedVendor = allVendors.find((v) => v.slug === slug) || MOCK_VENDORS.find((v) => v.slug === slug) || MOCK_VENDORS[0];
+    let found: Vendor | null = null;
+    const isGloballyApproved = localStorage.getItem('vendor_kyc_status') === 'verified';
 
-    if (cachedVendor) {
-      setVendor(cachedVendor);
+    const pendingRaw = localStorage.getItem('festivo_pending_vendors');
+    const customRaw = localStorage.getItem('festivo_custom_vendors');
+
+    if (pendingRaw) {
+      try {
+        const parsed = JSON.parse(pendingRaw);
+        const match = parsed.find((v: any) => v.slug === slug || v.id === slug || v.name?.toLowerCase().replace(/\s+/g, '-') === slug);
+        if (match) {
+          const isVerified = match.verified || isGloballyApproved || (match.details?.status === 'Approved');
+          found = {
+            id: match.id || 'v_custom_01',
+            name: match.name,
+            category: match.category || 'Photographer',
+            location: match.location || 'Hyderabad, India',
+            price_amount: match.price_amount || 45000,
+            price_label: match.price_label || 'Starting Package',
+            price_unit: '₹',
+            rating: match.rating || 5.0,
+            reviews: match.reviews || 1,
+            image: match.image || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=800',
+            logo: match.logo || 'AS',
+            verified: isVerified,
+            badge: isVerified ? 'Verified Partner' : 'Pending Review',
+            badge_color: isVerified ? 'bg-sage-600' : 'bg-gold-500',
+            slug: match.slug || 'vendor-partner',
+            description: match.details?.bio || match.bio || 'Verified Event Partner offering premium photography, videography, and event planning services across India.',
+            tags: [match.category || 'Event', 'Verified', 'Festivo Partner'],
+            gallery: [
+              'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=800',
+              'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80&w=800',
+              'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&q=80&w=800'
+            ]
+          };
+        }
+      } catch (e) {}
     }
 
+    if (!found && customRaw) {
+      try {
+        const parsed = JSON.parse(customRaw);
+        const match = parsed.find((v: any) => v.slug === slug || v.id === slug || v.name?.toLowerCase().replace(/\s+/g, '-') === slug);
+        if (match) {
+          const isVerified = match.verified || isGloballyApproved;
+          found = {
+            id: match.id,
+            name: match.name,
+            category: match.category || 'Event Provider',
+            location: match.location || 'Hyderabad, India',
+            price_amount: match.price_amount || 45000,
+            price_label: match.price_label || 'Starting Package',
+            price_unit: '₹',
+            rating: match.rating || 5.0,
+            reviews: match.reviews || 1,
+            image: match.image || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=800',
+            logo: match.logo || 'AS',
+            verified: isVerified,
+            badge: isVerified ? 'Verified Partner' : 'Pending Review',
+            badge_color: isVerified ? 'bg-sage-600' : 'bg-gold-500',
+            slug: match.slug || 'vendor-partner',
+            description: match.bio || 'Verified Event Partner offering premium photography, videography, and event planning services across India.',
+            tags: [match.category || 'Event', 'Verified'],
+            gallery: [
+              'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=800'
+            ]
+          };
+        }
+      } catch (e) {}
+    }
+
+    if (!found) {
+      const allVendors = dataCache.get<Vendor[]>('all_vendors') || MOCK_VENDORS;
+      found = allVendors.find((v) => v.slug === slug) || MOCK_VENDORS.find((v) => v.slug === slug) || MOCK_VENDORS[0];
+    }
+
+    setVendor(found);
+
     Promise.all([
-      dataCache.fetchWithCache(`vendor_${slug}`, async () => {
-        const { data } = await supabase.from('vendors').select('*').eq('slug', slug).maybeSingle();
-        return data as Vendor | null;
-      }),
       dataCache.fetchWithCache(`reviews_${slug}`, async () => {
         const { data } = await supabase
           .from('reviews')
@@ -154,12 +222,9 @@ export default function VendorDetailPage() {
         const { data } = await supabase.from('vendors').select('*').limit(12);
         return (data && data.length > 0) ? (data as Vendor[]) : MOCK_VENDORS;
       }),
-    ]).then(([vendorData, reviewData, allVendorsList]) => {
-      const finalVendor = vendorData || cachedVendor || MOCK_VENDORS[0];
-      setVendor(finalVendor);
+    ]).then(([reviewData, allVendorsList]) => {
       setReviews(reviewData);
       const fullList = (allVendorsList && allVendorsList.length > 0) ? allVendorsList : MOCK_VENDORS;
-      const similar = fullList.filter((v) => v.slug !== finalVendor.slug && v.category === finalVendor.category);
       setSimilarVendors(similar.length ? similar : fullList.filter((v) => v.slug !== finalVendor.slug).slice(0, 4));
       setLoading(false);
     });
@@ -275,21 +340,18 @@ export default function VendorDetailPage() {
           {/* Breadcrumb / Back */}
           <div className="flex items-center justify-between mb-4">
             <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sage-700 hover:text-sage-900 font-bold text-sm transition-colors">
-              <ArrowLeft className="w-4 h-4" />
-              <span className="hidden xs:inline">Back to Vendors</span>
-              <span className="xs:hidden">Back</span>
+              <ArrowLeft className="w-4 h-4" /> Back to Vendors
             </button>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setLiked(!liked)}
-                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-white border border-sage-200 rounded-xl text-sage-800 text-xs sm:text-sm font-bold shadow-xs hover:bg-sage-50 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-sage-200 rounded-xl text-sage-800 text-sm font-bold shadow-xs hover:bg-sage-50 transition-colors"
               >
                 <Heart className={`w-4 h-4 ${liked ? 'text-red-500 fill-red-500' : 'text-sage-600'}`} />
-                <span className="hidden sm:inline">{liked ? 'Shortlisted' : 'Shortlist'}</span>
+                {liked ? 'Shortlisted' : 'Shortlist'}
               </button>
-              <button className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-white border border-sage-200 rounded-xl text-sage-800 text-xs sm:text-sm font-bold shadow-xs hover:bg-sage-50 transition-colors">
-                <Share2 className="w-4 h-4 text-sage-600" />
-                <span className="hidden sm:inline">Share</span>
+              <button className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-sage-200 rounded-xl text-sage-800 text-sm font-bold shadow-xs hover:bg-sage-50 transition-colors">
+                <Share2 className="w-4 h-4 text-sage-600" /> Share
               </button>
             </div>
           </div>
@@ -353,26 +415,26 @@ export default function VendorDetailPage() {
         {/* ── 2. Sticky Sub-Nav Tabs ───────────────────────────────────── */}
         <div className="sticky top-16 z-30 bg-white/95 backdrop-blur-md border-b border-sage-200 shadow-xs mt-6">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto no-scrollbar py-3 text-sm font-bold -mx-4 sm:mx-0 px-4 sm:px-0">
+            <div className="flex items-center gap-6 overflow-x-auto no-scrollbar py-3 text-sm font-bold">
               <button
                 onClick={() => scrollToSection('projects', projectsRef)}
-                className={`pb-1 border-b-2 transition-colors whitespace-nowrap flex-shrink-0 ${
+                className={`pb-1 border-b-2 transition-colors whitespace-nowrap ${
                   activeTab === 'projects' ? 'border-sage-700 text-sage-900' : 'border-transparent text-sage-600 hover:text-sage-900'
                 }`}
               >
-                Portfolio ({allImages.length})
+                Projects & Portfolio ({allImages.length})
               </button>
               <button
                 onClick={() => scrollToSection('areas', areasRef)}
-                className={`pb-1 border-b-2 transition-colors whitespace-nowrap flex-shrink-0 ${
+                className={`pb-1 border-b-2 transition-colors whitespace-nowrap ${
                   activeTab === 'areas' ? 'border-sage-700 text-sage-900' : 'border-transparent text-sage-600 hover:text-sage-900'
                 }`}
               >
-                Areas
+                Areas Available
               </button>
               <button
                 onClick={() => scrollToSection('about', aboutRef)}
-                className={`pb-1 border-b-2 transition-colors whitespace-nowrap flex-shrink-0 ${
+                className={`pb-1 border-b-2 transition-colors whitespace-nowrap ${
                   activeTab === 'about' ? 'border-sage-700 text-sage-900' : 'border-transparent text-sage-600 hover:text-sage-900'
                 }`}
               >
@@ -380,7 +442,7 @@ export default function VendorDetailPage() {
               </button>
               <button
                 onClick={() => scrollToSection('reviews', reviewsRef)}
-                className={`pb-1 border-b-2 transition-colors whitespace-nowrap flex-shrink-0 ${
+                className={`pb-1 border-b-2 transition-colors whitespace-nowrap ${
                   activeTab === 'reviews' ? 'border-sage-700 text-sage-900' : 'border-transparent text-sage-600 hover:text-sage-900'
                 }`}
               >
@@ -388,7 +450,7 @@ export default function VendorDetailPage() {
               </button>
               <button
                 onClick={() => scrollToSection('faq', faqRef)}
-                className={`pb-1 border-b-2 transition-colors whitespace-nowrap flex-shrink-0 ${
+                className={`pb-1 border-b-2 transition-colors whitespace-nowrap ${
                   activeTab === 'faq' ? 'border-sage-700 text-sage-900' : 'border-transparent text-sage-600 hover:text-sage-900'
                 }`}
               >
@@ -918,7 +980,7 @@ export default function VendorDetailPage() {
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {similarVendors.slice(0, 4).map((sim) => (
                   <div
                     key={sim.id}

@@ -18,164 +18,7 @@ import { useInView } from '../hooks/useInView';
 
 type BookingWithVendor = Booking & { vendor?: Vendor };
 
-const DEMO_BOOKINGS: BookingWithVendor[] = [
-  {
-    id: 'demo-1',
-    booking_ref: 'FEST-2026-8912',
-    customer_name: 'Kranti',
-    customer_email: 'kranti@festivo.com',
-    customer_phone: '+91 98765 43210',
-    event_type: 'Grand Wedding Reception',
-    event_date: '2026-09-15',
-    guests: 350,
-    total_amount: 145000,
-    special_requests: 'Requires Royal Marquee setup and live catering stations.',
-    payment_status: 'paid',
-    status: 'confirmed',
-    payment_intent_id: null,
-    vendor_id: 'v1',
-    created_at: new Date().toISOString(),
-    vendor: {
-      id: 'v1',
-      name: 'Royal Palace Convention Center',
-      slug: 'royal-palace-convention',
-      category: 'Venue',
-      description: 'Luxury wedding venue and convention hall.',
-      image: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=1200&q=80',
-      rating: 4.9,
-      reviews: 128,
-      price_label: '₹1,50,000',
-      price_amount: 150000,
-      price_unit: 'per event',
-      location: 'Hyderabad, Telangana',
-      verified: true,
-      badge: 'Featured',
-      badge_color: 'gold',
-      capacity: '500 guests',
-      experience_years: 8,
-      gallery: [],
-      tags: ['Air Conditioned', 'Valet Parking', 'Catering Allowed'],
-      created_at: new Date().toISOString()
-    }
-  },
-  {
-    id: 'demo-2',
-    booking_ref: 'FEST-2026-4421',
-    customer_name: 'Kranti',
-    customer_email: 'kranti@festivo.com',
-    customer_phone: '+91 98765 43210',
-    event_type: 'Catering & Fine Dining',
-    event_date: '2026-09-15',
-    guests: 350,
-    total_amount: 85000,
-    special_requests: 'South & North Indian Multi-Cuisine Buffet with live counters.',
-    payment_status: 'paid',
-    status: 'confirmed',
-    payment_intent_id: null,
-    vendor_id: 'v2',
-    created_at: new Date().toISOString(),
-    vendor: {
-      id: 'v2',
-      name: 'Spice Craft Gourmet Caterers',
-      slug: 'spice-craft-caterers',
-      category: 'Catering',
-      description: 'Premium event catering service.',
-      image: 'https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=1200&q=80',
-      rating: 4.8,
-      reviews: 94,
-      price_label: '₹85,000',
-      price_amount: 85000,
-      price_unit: 'per event',
-      location: 'Hyderabad, Telangana',
-      verified: true,
-      badge: 'Top Rated',
-      badge_color: 'sage',
-      capacity: '1000 guests',
-      experience_years: 12,
-      gallery: [],
-      tags: ['Multi-cuisine', 'Live Counters', 'Buffet Setup'],
-      created_at: new Date().toISOString()
-    }
-  },
-  {
-    id: 'demo-3',
-    booking_ref: 'FEST-2026-1092',
-    customer_name: 'Kranti',
-    customer_email: 'kranti@festivo.com',
-    customer_phone: '+91 98765 43210',
-    event_type: 'Wedding Photography & Drone',
-    event_date: '2026-09-15',
-    guests: 350,
-    total_amount: 60000,
-    special_requests: 'Full day coverage + 4K Teaser Video & Drone highlights.',
-    payment_status: 'paid',
-    status: 'pending',
-    payment_intent_id: null,
-    vendor_id: 'v3',
-    created_at: new Date().toISOString(),
-    vendor: {
-      id: 'v3',
-      name: 'Candid Moments Photography',
-      slug: 'candid-moments-photo',
-      category: 'Photographer',
-      description: 'Candid wedding photography & cinematography.',
-      image: 'https://images.unsplash.com/photo-1537633552985-df8429e8048b?auto=format&fit=crop&w=1200&q=80',
-      rating: 4.9,
-      reviews: 76,
-      price_label: '₹60,000',
-      price_amount: 60000,
-      price_unit: 'per event',
-      location: 'Hyderabad, Telangana',
-      verified: true,
-      badge: 'Trending',
-      badge_color: 'gold',
-      capacity: null,
-      experience_years: 6,
-      gallery: [],
-      tags: ['4K Video', 'Drone Shots', 'Album Included'],
-      created_at: new Date().toISOString()
-    }
-  },
-  {
-    id: 'demo-4',
-    booking_ref: 'FEST-2024-5510',
-    customer_name: 'Kranti',
-    customer_email: 'kranti@festivo.com',
-    customer_phone: '+91 98765 43210',
-    event_type: 'Silver Jubilee Anniversary Banquet',
-    event_date: '2024-05-12',
-    guests: 200,
-    total_amount: 95000,
-    special_requests: 'Floral stage decoration & acoustic ambient music.',
-    payment_status: 'paid',
-    status: 'confirmed',
-    payment_intent_id: null,
-    vendor_id: 'v4',
-    created_at: '2024-05-10T10:00:00.000Z',
-    vendor: {
-      id: 'v4',
-      name: 'Elegance Floral Decorators',
-      slug: 'elegance-floral-decor',
-      category: 'Decorators',
-      description: 'Luxury event decor & floral stage design.',
-      image: 'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=1200&q=80',
-      rating: 4.8,
-      reviews: 65,
-      price_label: '₹95,000',
-      price_amount: 95000,
-      price_unit: 'per event',
-      location: 'Bangalore, Karnataka',
-      verified: true,
-      badge: 'Completed',
-      badge_color: 'sage',
-      capacity: '300 guests',
-      experience_years: 6,
-      gallery: [],
-      tags: ['Stage Decor', 'Floral Entrance'],
-      created_at: '2024-05-10T10:00:00.000Z'
-    }
-  }
-];
+const DEMO_BOOKINGS: BookingWithVendor[] = [];
 
 export default function CustomerDashboard() {
   const navigate = useNavigate();
@@ -272,12 +115,22 @@ export default function CustomerDashboard() {
         const vendorMap = new Map((vendors ?? []).map(v => [v.id, v]));
         setBookings(data.map(b => ({ ...b, vendor: vendorMap.get(b.vendor_id) })));
       } else {
-        // Fallback to DEMO_BOOKINGS if no real database entries found
-        setBookings(DEMO_BOOKINGS);
+        const savedCustomerBookings = localStorage.getItem('festivo_customer_bookings');
+        if (savedCustomerBookings) {
+          try {
+            setBookings(JSON.parse(savedCustomerBookings));
+          } catch (e) {
+            setBookings([]);
+          }
+        } else {
+          setBookings([]);
+        }
       }
       setLoading(false);
     };
     fetchBookings();
+    window.addEventListener('storage', fetchBookings);
+    return () => window.removeEventListener('storage', fetchBookings);
   }, [user]);
 
   // Interactive Live Chat & Call Handlers
@@ -481,7 +334,7 @@ export default function CustomerDashboard() {
           {activeTab === 'overview' && (
             <>
               {/* 4 Summary Metric Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5 mb-8">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-8">
                 {[
                   {
                     label: 'Total Bookings',
@@ -505,7 +358,7 @@ export default function CustomerDashboard() {
                     action: () => setActiveTab('payments')
                   },
                   {
-                    label: 'Past Events',
+                    label: 'Past Events / Reviews',
                     value: String(pastBookings.length),
                     icon: Star,
                     iconBg: 'bg-[#fcf6ec] text-[#866838]',
@@ -515,25 +368,25 @@ export default function CustomerDashboard() {
                   <div 
                     key={stat.label} 
                     onClick={stat.action} 
-                    className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-sage-100/60 card-hover cursor-pointer hover:border-sage-300 transition-all group relative flex flex-col justify-between min-h-[110px] sm:min-h-[140px]"
+                    className="bg-white rounded-2xl p-6 shadow-sm border border-sage-100/60 card-hover cursor-pointer hover:border-sage-300 transition-all group relative flex flex-col justify-between min-h-[140px]"
                   >
-                    <div className={`w-9 h-9 sm:w-10 sm:h-10 ${stat.iconBg} rounded-xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform`}>
-                      <stat.icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <div className={`w-10 h-10 ${stat.iconBg} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                      <stat.icon className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="font-serif text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#1a3020] mb-1 tracking-tight">{stat.value}</p>
-                      <p className="text-dark-500 text-[11px] sm:text-xs md:text-sm font-medium flex items-center justify-between">
-                        <span className="leading-tight">{stat.label}</span>
-                        <ChevronRight className="w-3.5 h-3.5 text-sage-400 group-hover:translate-x-0.5 transition-transform flex-shrink-0 ml-1" />
+                      <p className="font-serif text-3xl md:text-4xl font-extrabold text-[#1a3020] mb-1 tracking-tight">{stat.value}</p>
+                      <p className="text-dark-500 text-xs md:text-sm font-medium flex items-center justify-between">
+                        <span>{stat.label}</span>
+                        <ChevronRight className="w-3.5 h-3.5 text-sage-400 group-hover:translate-x-0.5 transition-transform" />
                       </p>
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 sm:gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Left Column: Upcoming Events */}
-                <div className="xl:col-span-2">
+                <div className="lg:col-span-2">
                   <div className="bg-white rounded-2xl shadow-sm border border-sage-100/60 p-6">
                     <div className="flex items-center justify-between mb-6">
                       <h2 className="font-serif text-2xl font-bold text-[#1c3323] flex items-center gap-2.5">
@@ -558,44 +411,44 @@ export default function CustomerDashboard() {
                     ) : (
                       <div className="space-y-3">
                         {upcomingBookings.slice(0, 5).map(booking => (
-                          <div 
-                            key={booking.id} 
-                            onClick={() => {
-                              if (booking.vendor?.image) {
-                                setPreviewImage({
-                                  url: booking.vendor.image,
-                                  title: booking.vendor.name,
-                                  subtitle: booking.vendor.category,
-                                  slug: booking.vendor.slug
-                                });
-                              }
-                            }}
-                            className="flex items-center gap-4 p-4 bg-sage-50/60 hover:bg-sage-100/90 rounded-xl transition-all cursor-pointer group hover:shadow-xs border border-transparent hover:border-sage-200"
-                            title="Click anywhere on this card to open photo preview"
-                          >
+                          <div key={booking.id} className="flex items-center gap-4 p-4 bg-sage-50/60 rounded-xl hover:bg-sage-100/60 transition-colors">
                             {booking.vendor && (
-                              <div 
-                                className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 relative group/img border border-sage-200 shadow-xs group-hover:shadow-md transition-all p-0 bg-transparent block"
+                              <button 
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  if (booking.vendor?.image) {
+                                    setPreviewImage({
+                                      url: booking.vendor.image,
+                                      title: booking.vendor.name,
+                                      subtitle: booking.vendor.category,
+                                      slug: booking.vendor.slug
+                                    });
+                                  }
+                                }}
+                                className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 cursor-pointer relative group/img border border-sage-200 shadow-xs hover:shadow-md transition-all p-0 bg-transparent block focus:outline-none"
+                                title="Click to view photo in full size"
                               >
                                 {booking.vendor.image && !booking.vendor.image.includes('pexels.com') ? (
                                   <img 
                                     src={booking.vendor.image} 
                                     alt="" 
-                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 pointer-events-none" 
+                                    className="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-300 pointer-events-none" 
                                   />
                                 ) : (
                                   <div className="w-full h-full bg-gradient-to-br from-sage-600 to-sage-800 flex items-center justify-center pointer-events-none">
                                     <span className="text-white text-xs font-bold">{booking.vendor.category[0] || 'V'}</span>
                                   </div>
                                 )}
-                                <div className="absolute inset-0 bg-dark-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white pointer-events-none">
+                                <div className="absolute inset-0 bg-dark-900/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center text-white pointer-events-none">
                                   <ZoomIn className="w-4 h-4 text-white drop-shadow-md" />
                                 </div>
-                              </div>
+                              </button>
                             )}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
-                                <p className="font-bold text-sage-900 text-sm truncate group-hover:text-sage-700">{booking.vendor?.name ?? 'Vendor'}</p>
+                                <p className="font-bold text-sage-900 text-sm truncate">{booking.vendor?.name ?? 'Vendor'}</p>
                                 {statusBadge(booking.status)}
                               </div>
                               <p className="text-dark-500 text-xs">{booking.event_type} · {new Date(booking.event_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} · {booking.guests} guests</p>
@@ -659,45 +512,45 @@ export default function CustomerDashboard() {
               ) : (
                 <div className="space-y-4">
                   {bookings.map(booking => (
-                    <div 
-                      key={booking.id} 
-                      onClick={() => {
-                        if (booking.vendor?.image) {
-                          setPreviewImage({
-                            url: booking.vendor.image,
-                            title: booking.vendor.name,
-                            subtitle: booking.vendor.category,
-                            slug: booking.vendor.slug
-                          });
-                        }
-                      }}
-                      className="border border-sage-100 rounded-2xl p-5 hover:shadow-card transition-all cursor-pointer bg-white hover:border-sage-300 hover:bg-sage-50/40 group"
-                      title="Click anywhere on card to open image preview modal"
-                    >
+                    <div key={booking.id} className="border border-sage-100 rounded-2xl p-5 hover:shadow-card transition-all">
                       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                         {booking.vendor && (
-                          <div 
-                            className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 relative group/img border border-sage-200 shadow-xs group-hover:shadow-md transition-all p-0 bg-transparent block"
+                          <button 
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              if (booking.vendor?.image) {
+                                setPreviewImage({
+                                  url: booking.vendor.image,
+                                  title: booking.vendor.name,
+                                  subtitle: booking.vendor.category,
+                                  slug: booking.vendor.slug
+                                });
+                              }
+                            }}
+                            className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 cursor-pointer relative group/img border border-sage-200 shadow-xs hover:shadow-md transition-all p-0 bg-transparent block focus:outline-none"
+                            title="Click to view photo in full size"
                           >
                             {booking.vendor.image && !booking.vendor.image.includes('pexels.com') ? (
                               <img 
                                 src={booking.vendor.image} 
                                 alt="" 
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 pointer-events-none" 
+                                className="w-full h-full object-cover group-hover/img:scale-110 transition-transform duration-300 pointer-events-none" 
                               />
                             ) : (
                               <div className="w-full h-full bg-gradient-to-br from-sage-600 to-sage-800 flex items-center justify-center pointer-events-none">
                                 <span className="text-white text-sm font-bold">{booking.vendor.category[0] || 'V'}</span>
                               </div>
                             )}
-                            <div className="absolute inset-0 bg-dark-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white pointer-events-none">
+                            <div className="absolute inset-0 bg-dark-900/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center text-white pointer-events-none">
                               <ZoomIn className="w-5 h-5 text-white drop-shadow-md" />
                             </div>
-                          </div>
+                          </button>
                         )}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <p className="font-bold text-sage-900 group-hover:text-sage-700">{booking.vendor?.name ?? 'Vendor'}</p>
+                            <p className="font-bold text-sage-900">{booking.vendor?.name ?? 'Vendor'}</p>
                             {statusBadge(booking.status)}
                           </div>
                           <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-dark-500">
@@ -706,17 +559,14 @@ export default function CustomerDashboard() {
                             <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {booking.event_type}</span>
                           </div>
                         </div>
-                        <div className="text-right flex-shrink-0 min-w-0">
-                          <p className="font-display text-base sm:text-lg font-bold text-sage-900">₹{booking.total_amount.toLocaleString('en-IN')}</p>
-                          <p className="text-dark-400 text-[10px] sm:text-xs font-mono truncate max-w-[100px] sm:max-w-none">{booking.booking_ref}</p>
+                        <div className="text-right flex-shrink-0">
+                          <p className="font-display text-lg font-bold text-sage-900">₹{booking.total_amount.toLocaleString('en-IN')}</p>
+                          <p className="text-dark-400 text-xs font-mono">{booking.booking_ref}</p>
                         </div>
                       </div>
 
                       {reviewingBooking === booking.id ? (
-                        <div 
-                          onClick={(e) => e.stopPropagation()} 
-                          className="mt-4 pt-4 border-t border-sage-100"
-                        >
+                        <div className="mt-4 pt-4 border-t border-sage-100">
                           <p className="font-bold text-sage-900 text-sm mb-3">Write a Review</p>
                           <div className="flex gap-1 mb-3">
                             {[1, 2, 3, 4, 5].map(n => (
@@ -746,22 +596,19 @@ export default function CustomerDashboard() {
                           </div>
                         </div>
                       ) : (
-                        <div 
-                          onClick={(e) => e.stopPropagation()} 
-                          className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-sage-100 items-center justify-between"
-                        >
+                        <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-sage-100 items-center justify-between">
                           <div className="flex items-center gap-3">
                             {booking.vendor && (
-                              <button onClick={(e) => { e.stopPropagation(); navigate(`/vendors/${booking.vendor?.slug}`); }} className="text-xs font-bold text-sage-600 hover:underline flex items-center gap-1">
+                              <button onClick={() => navigate(`/vendors/${booking.vendor?.slug}`)} className="text-xs font-bold text-sage-600 hover:underline flex items-center gap-1">
                                 View Vendor <ChevronRight className="w-3 h-3" />
                               </button>
                             )}
                             {booking.status === 'confirmed' && new Date(booking.event_date) < new Date() && (
-                              <button onClick={(e) => { e.stopPropagation(); setReviewingBooking(booking.id); }} className="text-xs font-bold text-gold-600 hover:underline flex items-center gap-1">
+                              <button onClick={() => setReviewingBooking(booking.id)} className="text-xs font-bold text-gold-600 hover:underline flex items-center gap-1">
                                 <Star className="w-3 h-3" /> Write Review
                               </button>
                             )}
-                            <button onClick={(e) => { e.stopPropagation(); navigate(`/confirmation/${booking.booking_ref}`); }} className="text-xs font-bold text-sage-600 hover:underline flex items-center gap-1">
+                            <button onClick={() => navigate(`/confirmation/${booking.booking_ref}`)} className="text-xs font-bold text-sage-600 hover:underline flex items-center gap-1">
                               <FileText className="w-3 h-3" /> View Receipt
                             </button>
                           </div>
@@ -769,13 +616,13 @@ export default function CustomerDashboard() {
                           {booking.vendor && (
                             <div className="flex items-center gap-2">
                               <button
-                                onClick={(e) => { e.stopPropagation(); handleOpenChat(booking.vendor?.name || 'Vendor', booking.vendor?.category || 'Service', booking.vendor?.image); }}
+                                onClick={() => handleOpenChat(booking.vendor?.name || 'Vendor', booking.vendor?.category || 'Service', booking.vendor?.image)}
                                 className="px-3 py-1.5 bg-sage-100 text-sage-700 hover:bg-sage-200 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5"
                               >
                                 <MessageSquare className="w-3.5 h-3.5 text-sage-600" /> Live Chat
                               </button>
                               <button
-                                onClick={(e) => { e.stopPropagation(); handleOpenCall(booking.vendor?.name || 'Vendor', booking.vendor?.location || 'Hyderabad'); }}
+                                onClick={() => handleOpenCall(booking.vendor?.name || 'Vendor', booking.vendor?.location || 'Hyderabad')}
                                 className="px-3 py-1.5 bg-gold-100 text-gold-800 hover:bg-gold-200 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5"
                               >
                                 <PhoneCall className="w-3.5 h-3.5 text-gold-600" /> Call
@@ -810,7 +657,7 @@ export default function CustomerDashboard() {
               </div>
 
               {savedVendorList.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {savedVendorList.map(vendor => (
                     <div key={vendor.id} className="group bg-white rounded-2xl overflow-hidden shadow-card border border-sage-100 hover:shadow-card-hover transition-all duration-300 flex flex-col">
                       <div className="relative h-48 overflow-hidden cursor-pointer" onClick={() => navigate(`/vendors/${vendor.slug}`)}>

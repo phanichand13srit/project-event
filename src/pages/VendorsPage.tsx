@@ -139,25 +139,98 @@ export default function VendorsPage() {
   }, [searchParams]);
 
   useEffect(() => {
-    const cached = dataCache.get<Vendor[]>('all_vendors');
-    if (cached && cached.length > 0) {
-      setVendors(cached);
-      setLoading(false);
-    } else {
-      setVendors(MOCK_VENDORS);
-      setLoading(false);
-    }
+    const loadMergedVendors = () => {
+      let baseList = [...MOCK_VENDORS];
 
-    dataCache
-      .fetchWithCache('all_vendors', async () => {
-        const { data } = await supabase.from('vendors').select('*');
-        return (data && data.length > 0) ? data : MOCK_VENDORS;
-      })
-      .then((data) => {
-        if (data && data.length > 0) setVendors(data);
-        else setVendors(MOCK_VENDORS);
-        setLoading(false);
+      const pendingRaw = localStorage.getItem('festivo_pending_vendors');
+      const customRaw = localStorage.getItem('festivo_custom_vendors');
+      const isGloballyApproved = localStorage.getItem('vendor_kyc_status') === 'verified';
+
+      const extraVendors: Vendor[] = [];
+
+      if (pendingRaw) {
+        try {
+          const parsed = JSON.parse(pendingRaw);
+          parsed.forEach((item: any) => {
+            const isVerified = item.verified || isGloballyApproved || (item.details?.status === 'Approved');
+            extraVendors.push({
+              id: item.id || 'v_custom_01',
+              name: item.name,
+              category: item.category || 'Photographer',
+              location: item.location || 'Hyderabad, India',
+              price_amount: item.price_amount || 45000,
+              price_label: item.price_label || 'Starting Package',
+              price_unit: '₹',
+              rating: item.rating || 5.0,
+              reviews: item.reviews || 1,
+              image: item.image || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=800',
+              logo: item.logo || 'AS',
+              verified: isVerified,
+              badge: isVerified ? 'Verified Partner' : 'Pending Review',
+              badge_color: isVerified ? 'bg-sage-600' : 'bg-gold-500',
+              slug: item.slug || 'vendor-partner',
+              description: item.details?.bio || 'Verified Event Partner offering premium services.',
+              tags: [item.category || 'Event', 'Verified', 'Festivo Partner'],
+              gallery: [
+                'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=800',
+                'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&q=80&w=800'
+              ]
+            });
+          });
+        } catch (e) {}
+      }
+
+      if (customRaw) {
+        try {
+          const parsed = JSON.parse(customRaw);
+          parsed.forEach((item: any) => {
+            const isVerified = item.verified || isGloballyApproved;
+            extraVendors.push({
+              id: item.id,
+              name: item.name,
+              category: item.category || 'Event Provider',
+              location: item.location || 'Hyderabad, India',
+              price_amount: item.price_amount || 45000,
+              price_label: item.price_label || 'Starting Package',
+              price_unit: '₹',
+              rating: item.rating || 5.0,
+              reviews: item.reviews || 1,
+              image: item.image || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=800',
+              logo: item.logo || 'AS',
+              verified: isVerified,
+              badge: isVerified ? 'Verified Partner' : 'Pending Review',
+              badge_color: isVerified ? 'bg-sage-600' : 'bg-gold-500',
+              slug: item.slug || 'vendor-partner',
+              description: item.bio || 'Verified Event Partner offering premium services.',
+              tags: [item.category || 'Event', 'Verified'],
+              gallery: [
+                'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=800'
+              ]
+            });
+          });
+        } catch (e) {}
+      }
+
+      extraVendors.forEach(extra => {
+        const idx = baseList.findIndex(v => v.id === extra.id || v.name.toLowerCase() === extra.name.toLowerCase() || v.slug === extra.slug);
+        if (idx >= 0) {
+          baseList[idx] = { ...baseList[idx], ...extra };
+        } else {
+          baseList.unshift(extra);
+        }
       });
+
+      setVendors(baseList);
+      setLoading(false);
+    };
+
+    loadMergedVendors();
+    window.addEventListener('storage', loadMergedVendors);
+    window.addEventListener('focus', loadMergedVendors);
+    return () => {
+      window.removeEventListener('storage', loadMergedVendors);
+      window.removeEventListener('focus', loadMergedVendors);
+    };
   }, []);
 
   const filtered = useMemo(() => {
@@ -296,7 +369,7 @@ export default function VendorsPage() {
               </div>
 
               {loading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                   {Array.from({ length: 6 }).map((_, i) => (
                     <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-card">
                       <div className="h-52 bg-cream-100 shimmer-bg animate-pulse" />
@@ -320,7 +393,7 @@ export default function VendorsPage() {
                   </button>
                 </div>
               ) : (
-                <div ref={gridRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+                <div ref={gridRef} className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {filtered.map(vendor => <VendorCard key={vendor.id} vendor={vendor} />)}
                 </div>
               )}

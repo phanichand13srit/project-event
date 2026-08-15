@@ -54,16 +54,16 @@ export default function Footer() {
               </h3>
               <p className="text-sage-400 font-medium">Join 50,000+ happy clients who trusted Festivo with their celebrations.</p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 flex-shrink-0 w-full sm:w-auto">
+            <div className="flex gap-3 flex-shrink-0">
               <button
                 onClick={() => navigate('/auth')}
-                className="px-6 py-3 rounded-xl border border-white/20 text-white font-bold hover:border-sage-400 hover:text-sage-300 transition-all duration-200 text-center"
+                className="px-6 py-3 rounded-xl border border-white/20 text-white font-bold hover:border-sage-400 hover:text-sage-300 transition-all duration-200"
               >
                 List Your Business
               </button>
               <button
                 onClick={() => navigate('/vendors')}
-                className="px-6 py-3 rounded-xl bg-gradient-brand text-white font-bold hover:shadow-glow hover:scale-105 transition-all duration-300 text-center"
+                className="px-6 py-3 rounded-xl bg-gradient-brand text-white font-bold hover:shadow-glow hover:scale-105 transition-all duration-300"
               >
                 Start Planning
               </button>

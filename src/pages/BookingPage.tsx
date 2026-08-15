@@ -210,7 +210,7 @@ export default function BookingPage() {
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
               <span className="text-sm">Back to vendor</span>
             </button>
-            <h1 className="font-display text-2xl sm:text-3xl font-bold text-white mb-1">Book Your Event</h1>
+            <h1 className="font-display text-3xl font-bold text-white mb-1">Book Your Event</h1>
             <p className="text-dark-300 text-sm">Secure your date with {vendor.name}</p>
 
             <div className="flex items-center gap-3 mt-6">
@@ -227,9 +227,9 @@ export default function BookingPage() {
           </div>
         </div>
 
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8">
-            <div className="lg:col-span-3 order-2 lg:order-1">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+            <div className="lg:col-span-3">
               {step === 1 ? (
                 <div className="bg-white rounded-2xl shadow-card p-6 md:p-8">
                   <h2 className="font-display text-xl font-bold text-dark-900 mb-6">Event Details</h2>
@@ -595,7 +595,7 @@ export default function BookingPage() {
               )}
             </div>
 
-            <div className="lg:col-span-2 space-y-4 order-1 lg:order-2">
+            <div className="lg:col-span-2 space-y-4">
               <div ref={summaryRef} className={`bg-white rounded-2xl shadow-card overflow-hidden animate-on-scroll ${summaryInView ? 'in-view' : ''}`}>
                 <div className="relative h-40">
                   {vendor.image && !vendor.image.includes('pexels.com') ? (

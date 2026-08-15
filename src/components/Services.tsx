@@ -42,17 +42,17 @@ export default function Services() {
         </div>
 
         {/* Filter Navigation Bar */}
-        <div className="flex justify-start sm:justify-center mb-14 overflow-x-auto scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
-          <div className="inline-flex p-1.5 rounded-2xl bg-sage-100/70 border border-sage-200/80 backdrop-blur-md shadow-inner gap-1 flex-shrink-0">
+        <div className="flex justify-center mb-14">
+          <div className="inline-flex p-1.5 rounded-2xl bg-sage-100/70 border border-sage-200/80 backdrop-blur-md shadow-inner gap-1">
             {[
-              { id: 'all', label: 'All (14)' },
+              { id: 'all', label: 'All Services (14)' },
               { id: 'popular', label: 'Most Popular' },
-              { id: 'essential', label: '✦ Essentials' },
+              { id: 'essential', label: '✦ Event Essentials' },
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`px-4 sm:px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 whitespace-nowrap ${
+                className={`px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 ${
                   activeTab === tab.id
                     ? 'bg-sage-900 text-white shadow-md scale-105'
                     : 'text-sage-700 hover:text-sage-950 hover:bg-white/50'
@@ -64,8 +64,8 @@ export default function Services() {
           </div>
         </div>
 
-        {/* Dynamic 3D Service Cards Grid (4 per row on desktop, 2 per row on mobile) */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+        {/* Dynamic 3D Service Cards Grid (4 per row on desktop) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           {filteredCategories.map((cat, i) => (
             <div
               key={cat.label}
@@ -76,7 +76,7 @@ export default function Services() {
               style={{ transitionDelay: `${Math.min(i * 60, 400)}ms` }}
             >
               {/* Card Image Container with cinematic overlay */}
-              <div className="relative h-40 sm:h-60 overflow-hidden">
+              <div className="relative h-60 overflow-hidden">
                 <img
                   src={cat.image}
                   alt={cat.label}
@@ -101,16 +101,16 @@ export default function Services() {
                 </div>
 
                 {/* Title floating over image bottom */}
-                <div className="absolute bottom-2 sm:bottom-4 left-3 sm:left-5 right-3 sm:right-5">
-                  <h3 className="font-display font-bold text-white text-lg sm:text-2xl drop-shadow-md group-hover:text-gold-300 transition-colors duration-300">
+                <div className="absolute bottom-4 left-5 right-5">
+                  <h3 className="font-display font-bold text-white text-2xl drop-shadow-md group-hover:text-gold-300 transition-colors duration-300">
                     {cat.label}
                   </h3>
                 </div>
               </div>
 
               {/* Card Content & Action Bar */}
-              <div className="p-4 sm:p-6 pt-3 sm:pt-4 flex-1 flex flex-col justify-between bg-white">
-                <p className="text-dark-600 text-xs sm:text-sm font-medium leading-relaxed line-clamp-1 sm:line-clamp-2 mb-3 sm:mb-6">
+              <div className="p-6 pt-4 flex-1 flex flex-col justify-between bg-white">
+                <p className="text-dark-600 text-sm font-medium leading-relaxed line-clamp-2 mb-6">
                   {cat.description}
                 </p>
 

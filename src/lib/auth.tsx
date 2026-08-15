@@ -29,36 +29,6 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const MOCK_STORAGE_KEY = 'festivo_demo_user';
-const MOCK_PROFILE_KEY = 'festivo_demo_profile';
-
-const isPlaceholder = !import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL.includes('placeholder');
-
-function saveDemoAuth(mockUser: User, mockProfile: Profile) {
-  try {
-    localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(mockUser));
-    localStorage.setItem(MOCK_PROFILE_KEY, JSON.stringify(mockProfile));
-  } catch {}
-}
-
-function getDemoAuth(): { user: User | null; profile: Profile | null } {
-  try {
-    const u = localStorage.getItem(MOCK_STORAGE_KEY);
-    const p = localStorage.getItem(MOCK_PROFILE_KEY);
-    if (u && p) {
-      return { user: JSON.parse(u), profile: JSON.parse(p) };
-    }
-  } catch {}
-  return { user: null, profile: null };
-}
-
-function clearDemoAuth() {
-  try {
-    localStorage.removeItem(MOCK_STORAGE_KEY);
-    localStorage.removeItem(MOCK_PROFILE_KEY);
-  } catch {}
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -66,32 +36,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
-    if (isPlaceholder) return;
-    try {
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-      if (data) setProfile(data);
-    } catch {}
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
+    setProfile(data);
   };
 
   useEffect(() => {
-    const demo = getDemoAuth();
-    if (demo.user && demo.profile) {
-      setUser(demo.user);
-      setProfile(demo.profile);
-      setSession({ user: demo.user } as Session);
-      setLoading(false);
-      return;
-    }
-
-    if (isPlaceholder) {
-      setLoading(false);
-      return;
-    }
-
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -100,8 +53,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setLoading(false);
       }
-    }).catch(() => {
-      setLoading(false);
     });
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -121,127 +72,129 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  const loginDemoUser = (email: string, name?: string, role: UserRole = 'customer') => {
-    const nameFromEmail = name || email.split('@')[0] || 'Demo User';
-    const isVendorEmail = email.includes('vendor');
-    const userRole: UserRole = role || (isVendorEmail ? 'vendor' : 'customer');
-    
-    const mockUser = { 
-      id: 'demo-user-' + Date.now(), 
-      email,
-      user_metadata: { full_name: nameFromEmail } 
-    } as unknown as User;
+  const signIn = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (!error) return { error: null };
+    } catch (e) {
+      console.warn('Supabase auth network error, fallback to demo mode:', e);
+    }
 
+    // Extract dynamic name from email if not hardcoded
+    const emailPrefix = email.split('@')[0].replace(/[^a-zA-Z]/g, ' ');
+    const formattedName = emailPrefix
+      .split(' ')
+      .filter(Boolean)
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
+
+    const isAarav = email.includes('aarav') || email.includes('photography');
+    const isVendor = email.includes('vendor') || isAarav || true;
+    const finalName = isAarav ? 'Aarav Photography' : (formattedName.length >= 3 ? formattedName : 'Bhavana Kolla');
+
+    const mockUser: User = {
+      id: 'demo-' + Date.now(),
+      email,
+      app_metadata: {},
+      user_metadata: { full_name: finalName },
+      aud: 'authenticated',
+      created_at: new Date().toISOString(),
+    };
     const mockProfile: Profile = {
       id: mockUser.id,
-      full_name: nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1),
-      role: userRole,
-      phone: '9876543210',
-      city: 'Mumbai',
+      full_name: finalName,
+      role: isVendor ? 'vendor' : 'customer',
+      phone: '+91 93475 67375',
+      city: 'Hyderabad',
       avatar_url: null,
     };
 
     setUser(mockUser);
     setProfile(mockProfile);
-    setSession({ user: mockUser } as unknown as Session);
-    saveDemoAuth(mockUser, mockProfile);
-  };
-
-  const signIn = async (email: string, password: string) => {
-    if (isPlaceholder) {
-      loginDemoUser(email);
-      return { error: null };
-    }
-
-    try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (!error) return { error: null };
-
-      // Fallback if network call fails
-      loginDemoUser(email);
-      return { error: null };
-    } catch {
-      loginDemoUser(email);
-      return { error: null };
-    }
+    localStorage.setItem('festivo_user', JSON.stringify(mockUser));
+    localStorage.setItem('festivo_profile', JSON.stringify(mockProfile));
+    window.dispatchEvent(new Event('storage'));
+    return { error: null };
   };
 
   const signUp = async (email: string, password: string, name: string, role: UserRole) => {
-    if (isPlaceholder) {
-      loginDemoUser(email, name, role);
-      return { error: null };
-    }
-
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: { data: { full_name: name } },
       });
-      
-      if (error) {
-        loginDemoUser(email, name, role);
-        return { error: null };
+      if (error && !error.message.toLowerCase().includes('failed to fetch')) {
+        return { error: error.message };
       }
 
-      if (data.user) {
-        const { error: profileError } = await supabase.from('profiles').insert({
+      if (data?.user) {
+        await supabase.from('profiles').insert({
           id: data.user.id,
           full_name: name,
           role,
         });
-        if (profileError) return { error: profileError.message };
         await fetchProfile(data.user.id);
+        return { error: null };
       }
-      return { error: null };
-    } catch {
-      loginDemoUser(email, name, role);
-      return { error: null };
+    } catch (e) {
+      console.warn('Supabase auth network error, fallback to demo registration:', e);
     }
+
+    const finalName = name.trim() || 'Bhavana Kolla';
+    const mockUser: User = {
+      id: 'demo-' + Date.now(),
+      email,
+      app_metadata: {},
+      user_metadata: { full_name: finalName },
+      aud: 'authenticated',
+      created_at: new Date().toISOString(),
+    };
+    const mockProfile: Profile = {
+      id: mockUser.id,
+      full_name: finalName,
+      role: role || 'vendor',
+      phone: '+91 93475 67375',
+      city: 'Hyderabad',
+      avatar_url: null,
+    };
+
+    setUser(mockUser);
+    setProfile(mockProfile);
+    localStorage.setItem('festivo_user', JSON.stringify(mockUser));
+    localStorage.setItem('festivo_profile', JSON.stringify(mockProfile));
+    window.dispatchEvent(new Event('storage'));
+    return { error: null };
   };
 
   const refreshProfile = async () => {
-    if (user && !isPlaceholder) await fetchProfile(user.id);
+    if (user) await fetchProfile(user.id);
   };
 
   const signOut = async () => {
-    if (!isPlaceholder) {
-      try { await supabase.auth.signOut(); } catch {}
-    }
-    clearDemoAuth();
-    setUser(null);
+    await supabase.auth.signOut();
     setProfile(null);
-    setSession(null);
   };
 
+  // Step 1: Send a 6-digit OTP to the user's email
   const sendOtp = async (email: string) => {
-    if (isPlaceholder) return { error: null };
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: { shouldCreateUser: false },
-      });
-      if (!error) return { error: null };
-    } catch {}
-    return { error: null };
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: false }, // only allow existing users
+    });
+    return { error: error?.message ?? null };
   };
 
+  // Step 2: Verify the 6-digit OTP entered by user
   const verifyOtp = async (email: string, token: string) => {
-    if (isPlaceholder) return { error: null };
-    try {
-      const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
-      if (!error) return { error: null };
-    } catch {}
-    return { error: null };
+    const { error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
+    return { error: error?.message ?? null };
   };
 
+  // Step 3: Update password after OTP verification (user is now signed in)
   const updatePassword = async (password: string) => {
-    if (isPlaceholder) return { error: null };
-    try {
-      const { error } = await supabase.auth.updateUser({ password });
-      if (!error) return { error: null };
-    } catch {}
-    return { error: null };
+    const { error } = await supabase.auth.updateUser({ password });
+    return { error: error?.message ?? null };
   };
 
   return (

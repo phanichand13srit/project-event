@@ -73,7 +73,7 @@ export default function Hero() {
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-24 pb-16">
         
         {/* Dynamic Animated Text Headline Box */}
-        <div className="relative mb-6 sm:mb-8 min-h-[200px] sm:min-h-[240px] md:min-h-[260px] flex items-center justify-center">
+        <div className="relative mb-8 min-h-[220px] sm:min-h-[240px] md:min-h-[260px] flex items-center justify-center">
           {slides.map((s, i) => (
             <div
               key={i}
@@ -115,7 +115,7 @@ export default function Hero() {
               <select
                 value={eventType}
                 onChange={(e) => setEventType(e.target.value)}
-                className="w-full pl-10 pr-4 py-3.5 md:py-4 text-sage-900 bg-transparent rounded-xl focus:bg-sage-50 transition-colors outline-none text-sm font-bold appearance-none cursor-pointer search-input"
+                className="w-full pl-10 pr-4 py-4 text-sage-900 bg-transparent rounded-xl focus:bg-sage-50 transition-colors outline-none text-sm font-bold appearance-none cursor-pointer search-input"
               >
                 <option value="">Select Occasion</option>
                 {eventTypes.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -134,7 +134,7 @@ export default function Hero() {
                 placeholder="Select City"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                className="w-full pl-10 pr-4 py-3.5 md:py-4 text-sage-900 bg-transparent rounded-xl focus:bg-sage-50 transition-colors outline-none text-sm font-bold placeholder:text-sage-400 search-input"
+                className="w-full pl-10 pr-4 py-4 text-sage-900 bg-transparent rounded-xl focus:bg-sage-50 transition-colors outline-none text-sm font-bold placeholder:text-sage-400 search-input"
               />
             </div>
 
@@ -148,13 +148,13 @@ export default function Hero() {
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full pl-10 pr-4 py-3.5 md:py-4 text-sage-900 bg-transparent rounded-xl focus:bg-sage-50 transition-colors outline-none text-sm font-bold search-input"
+                className="w-full pl-10 pr-4 py-4 text-sage-900 bg-transparent rounded-xl focus:bg-sage-50 transition-colors outline-none text-sm font-bold search-input"
               />
             </div>
 
             <button
               onClick={handleSearch}
-              className="md:w-auto w-full px-8 py-3.5 md:py-4 bg-gradient-brand text-white font-bold rounded-xl hover:shadow-glow hover:scale-[1.02] transition-all duration-300 active:scale-95 whitespace-nowrap"
+              className="md:w-auto w-full px-8 py-4 bg-gradient-brand text-white font-bold rounded-xl hover:shadow-glow hover:scale-[1.02] transition-all duration-300 active:scale-95 whitespace-nowrap"
             >
               Search Vendors
             </button>
